@@ -1,0 +1,43 @@
+{% extends "base.html" %} {% block content %}
+<h3 class="mb-3">Dashboard</h3>
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>Alertas abiertas</h5>
+        <ul id="alertas" class="mb-0"></ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5>Últimas lecturas</h5>
+        <ul id="lecturas" class="mb-0"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  fetch("/api/alerts/")
+    .then((r) => r.json())
+    .then((data) => {
+      const ul = document.getElementById("alertas");
+      (data || []).slice(0, 5).forEach((a) => {
+        const li = document.createElement("li");
+        li.textContent = `${a.type} - ${a.severity} (${a.detected_at})`;
+        ul.appendChild(li);
+      });
+    });
+  fetch("/api/readings/")
+    .then((r) => r.json())
+    .then((data) => {
+      const ul = document.getElementById("lecturas");
+      (data || []).slice(0, 5).forEach((x) => {
+        const li = document.createElement("li");
+        li.textContent = `${x.device} @ ${x.ts} → Δ ${x.volume_liters_delta} L`;
+        ul.appendChild(li);
+      });
+    });
+</script>
+{% endblock %}
