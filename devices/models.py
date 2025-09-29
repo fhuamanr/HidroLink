@@ -11,7 +11,7 @@ class Device(models.Model):
     fw_version = models.CharField(max_length=30)
     install_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=16, default="active")
-    device_capabilities = JSONField(default=dict)
+    device_capabilities = models.JSONField(default=dict)
     last_seen_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
