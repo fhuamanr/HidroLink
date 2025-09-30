@@ -52,6 +52,9 @@ INSTALLED_APPS = [
     "alerts",
     "goals",
     "api",
+    "billing",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
 ]
 
 MIDDLEWARE = [
@@ -155,6 +158,10 @@ REST_FRAMEWORK = {
         "user": "240/minute",
     },
 }
+
+REST_FRAMEWORK.update({
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+})
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),

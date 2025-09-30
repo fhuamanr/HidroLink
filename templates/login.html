@@ -1,18 +1,65 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %}
+{% block content %}
 <div class="row justify-content-center">
   <div class="col-md-4">
     <h3 class="mb-3">Iniciar sesión</h3>
-    <form>
+
+    <!-- alerta discreta de error, accesible -->
+    <div id="alert" class="alert alert-danger d-none" role="status" aria-live="polite"></div>
+
+    <form id="loginForm" novalidate>
       <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input class="form-control" type="email" required />
+        <label class="form-label" for="u">Usuario o email</label>
+        <input id="u" class="form-control" type="text" autocomplete="username" required autofocus />
       </div>
       <div class="mb-3">
-        <label class="form-label">Contraseña</label>
-        <input class="form-control" type="password" required />
+        <label class="form-label" for="p">Contraseña</label>
+        <input id="p" class="form-control" type="password" autocomplete="current-password" required />
       </div>
-      <button class="btn btn-primary w-100" type="submit">Entrar</button>
+      <button id="btnLogin" class="btn btn-primary w-100" type="submit">Entrar</button>
     </form>
   </div>
 </div>
+
+<script>
+(function () {
+  const $form  = document.getElementById('loginForm');
+  const $btn   = document.getElementById('btnLogin');
+  const $alert = document.getElementById('alert');
+
+  $form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    $alert.classList.add('d-none');
+    $btn.disabled = true;
+    $btn.textContent = 'Ingresando...';
+
+    const username = document.getElementById('u').value.trim();
+    const password = document.getElementById('p').value;
+
+    try {
+      const r = await fetch('/api/token/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }) // SimpleJWT usa username/password
+      });
+
+      if (!r.ok) {
+        const msg = await r.text();
+        throw new Error('Credenciales inválidas');
+      }
+
+      const j = await r.json();
+      localStorage.setItem('access', j.access);
+      localStorage.setItem('refresh', j.refresh);
+      window.location.href = '/'; // al dashboard
+    } catch (err) {
+      $alert.textContent = err.message || 'No fue posible iniciar sesión.';
+      $alert.classList.remove('d-none');
+    } finally {
+      $btn.disabled = false;
+      $btn.textContent = 'Entrar';
+    }
+  });
+})();
+</script>
 {% endblock %}

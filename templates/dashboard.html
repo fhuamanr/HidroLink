@@ -19,25 +19,76 @@
   </div>
 </div>
 <script>
-  fetch("/api/alerts/")
-    .then((r) => r.json())
-    .then((data) => {
-      const ul = document.getElementById("alertas");
-      (data || []).slice(0, 5).forEach((a) => {
-        const li = document.createElement("li");
+  /* --- helpers JWT en localStorage --- */
+  const getAccess  = () => localStorage.getItem('access');
+  const getRefresh = () => localStorage.getItem('refresh');
+  
+  async function refreshToken() {
+    const refresh = getRefresh();
+    if (!refresh) return false;
+    const r = await fetch('/api/token/refresh/', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ refresh })
+    });
+    if (!r.ok) return false;
+    const j = await r.json();
+    localStorage.setItem('access', j.access);
+    return true;
+  }
+  
+  /* Wrapper que siempre manda Authorization y reintenta si vence el access */
+  async function authFetch(url, options = {}) {
+    const headers = Object.assign({}, options.headers, {
+      Authorization: 'Bearer ' + getAccess()
+    });
+    let r = await fetch(url, Object.assign({}, options, { headers }));
+    if (r.status === 401) {            // access vencido o no presente
+      const ok = await refreshToken(); // intenta refrescar
+      if (!ok) {                       // sin refresh => volver a login
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
+        window.location.href = '/login/';
+        return new Response(JSON.stringify([]), {status:401});
+      }
+      // reintento con token nuevo
+      const headers2 = Object.assign({}, options.headers, {
+        Authorization: 'Bearer ' + getAccess()
+      });
+      r = await fetch(url, Object.assign({}, options, { headers: headers2 }));
+    }
+    return r;
+  }
+  
+  /* --- carga del dashboard --- */
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!getAccess()) { window.location.href = '/login/'; return; }
+  
+    // Alertas abiertas
+    try {
+      const rA = await authFetch('/api/alerts/open/');
+      const dataA = await rA.json();
+      const ulA = document.getElementById('alertas');
+      ulA.innerHTML = '';
+      (dataA || []).slice(0, 5).forEach(a => {
+        const li = document.createElement('li');
         li.textContent = `${a.type} - ${a.severity} (${a.detected_at})`;
-        ul.appendChild(li);
+        ulA.appendChild(li);
       });
-    });
-  fetch("/api/readings/")
-    .then((r) => r.json())
-    .then((data) => {
-      const ul = document.getElementById("lecturas");
-      (data || []).slice(0, 5).forEach((x) => {
-        const li = document.createElement("li");
+    } catch(e) { console.error('alertas', e); }
+  
+    // Últimas lecturas
+    try {
+      const rR = await authFetch('/api/readings/');
+      const dataR = await rR.json();
+      const ulR = document.getElementById('lecturas');
+      ulR.innerHTML = '';
+      (dataR || []).slice(0, 5).forEach(x => {
+        const li = document.createElement('li');
         li.textContent = `${x.device} @ ${x.ts} → Δ ${x.volume_liters_delta} L`;
-        ul.appendChild(li);
+        ulR.appendChild(li);
       });
-    });
-</script>
+    } catch(e) { console.error('readings', e); }
+  });
+  </script>
 {% endblock %}

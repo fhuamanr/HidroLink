@@ -3,6 +3,7 @@ from devices.models import Device, Reading
 from alerts.models import Alert
 from goals.models import Goal
 from core.models import Household
+from billing.models import Tariff, HouseholdTariff
 
 class HouseholdSer(serializers.ModelSerializer):
     class Meta:
@@ -27,4 +28,14 @@ class AlertSer(serializers.ModelSerializer):
 class GoalSer(serializers.ModelSerializer):
     class Meta:
         model = Goal
+        fields = "__all__"
+
+class TariffSer(serializers.ModelSerializer):
+    class Meta:
+        model = Tariff
+        fields = "__all__"
+
+class HouseholdTariffSer(serializers.ModelSerializer):
+    class Meta:
+        model = HouseholdTariff
         fields = "__all__"

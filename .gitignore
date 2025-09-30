@@ -1,0 +1,35 @@
+# OS/IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Python/Django
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.log
+.venv/
+venv/
+.env
+.env.*
+db.sqlite3
+media/
+static/
+staticfiles/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Playwright (no subir reportes/videos/trazas)
+playwright-report/
+test-results/
+e2e/.cache/
+*.webm
+*.zip
+
+# Locust/ZAP reports (opcional ignorarlos si son pesados)
+*.csv
+*.har
+zap_report.*
+zap_warnings.md
